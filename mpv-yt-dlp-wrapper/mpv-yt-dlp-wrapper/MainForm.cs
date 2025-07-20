@@ -21,6 +21,22 @@ namespace mpv_yt_dlp_wrapper
             launchButton.Enabled = !string.IsNullOrWhiteSpace(urlTextBox.Text);
         }
 
+        private void ShowControls()
+        {
+            playPauseButton.Visible = true;
+            volumeSlider.Visible = true;
+            positionSlider.Visible = true;
+            timeLabel.Visible = true;
+        }
+
+        private void HideControls()
+        {
+            playPauseButton.Visible = false;
+            volumeSlider.Visible = false;
+            positionSlider.Visible = false;
+            timeLabel.Visible = false;
+        }
+
         private void MainForm_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -148,6 +164,8 @@ namespace mpv_yt_dlp_wrapper
 
                 // Get initial volume
                 await SendCommandAsync(1, "get_property", "volume");
+
+                ShowControls();
             }
             catch (Exception ex)
             {
@@ -157,6 +175,9 @@ namespace mpv_yt_dlp_wrapper
 
         private async Task StopMpvProcess()
         {
+            // Stop timers
+            HideControls(); // Ensure controls are hidden
+
             if (mpvProcess != null && !mpvProcess.HasExited)
             {
                 try
@@ -213,12 +234,31 @@ namespace mpv_yt_dlp_wrapper
         {
             if (string.IsNullOrEmpty(text)) return;
 
-            // Replace \r with \n to handle progress as separate lines
-            text = text.Replace("\r", Environment.NewLine);
+            // Process text once
+            text = text.Replace("\u001b[K", "").Replace("\r", Environment.NewLine);
 
             if (consoleTextBox.InvokeRequired)
             {
-                consoleTextBox.Invoke(() => consoleTextBox.AppendText(text + Environment.NewLine));
+                consoleTextBox.Invoke(() =>
+                {
+                    UpdateTextBox(text);
+                });
+            }
+            else
+            {
+                UpdateTextBox(text);
+            }
+        }
+
+        private void UpdateTextBox(string text)
+        {
+            string[] lines = consoleTextBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+            // Check if there's a line before the last one and it starts with "AV: "
+            if (lines.Length > 1 && lines[lines.Length - 2].StartsWith("AV: "))
+            {
+                lines[lines.Length - 2] = text;
+                consoleTextBox.Text = string.Join(Environment.NewLine, lines);
             }
             else
             {
@@ -290,7 +330,7 @@ namespace mpv_yt_dlp_wrapper
             }
         }
 
-        private async Task SendCommandAsync(params object[] command)
+        public async Task SendCommandAsync(params object[] command)
         {
             if (pipeClient == null || !pipeClient.IsConnected) return;
 
@@ -304,7 +344,7 @@ namespace mpv_yt_dlp_wrapper
             catch { }
         }
 
-        private async Task SendCommandAsync(int requestId, params string[] command)
+        public async Task SendCommandAsync(int requestId, params string[] command)
         {
             if (pipeClient == null || !pipeClient.IsConnected) return;
 

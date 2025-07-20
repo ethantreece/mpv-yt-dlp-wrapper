@@ -33,9 +33,6 @@
 
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-
-            // Controls
             urlTextBox = new TextBox();
             pasteButton = new Button();
             pasteAndGoButton = new Button();
@@ -44,133 +41,183 @@
             launchButton = new Button();
             urlLabel = new Label();
             qualityLabel = new Label();
-
-            // New controls
             splitContainer = new SplitContainer();
-
             mpvPanel = new Panel();
             playPauseButton = new Button();
             volumeSlider = new TrackBar();
             positionSlider = new TrackBar();
             timeLabel = new Label();
-
             consoleTextBox = new TextBox();
-
-            // MainForm
-            ClientSize = new Size(1000, 600);
-            Text = "MPV YouTube Launcher";
-            Name = "MainForm";
-
-            // URL Label
-            urlLabel.AutoSize = true;
-            urlLabel.Location = new Point(12, 15);
-            urlLabel.Size = new Size(99, 20);
-            urlLabel.Text = "YouTube URL:";
-
-            // URL TextBox
+            ((System.ComponentModel.ISupportInitialize)splitContainer).BeginInit();
+            splitContainer.Panel1.SuspendLayout();
+            splitContainer.Panel2.SuspendLayout();
+            splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)volumeSlider).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)positionSlider).BeginInit();
+            SuspendLayout();
+            // 
+            // urlTextBox
+            // 
             urlTextBox.Location = new Point(144, 12);
+            urlTextBox.Name = "urlTextBox";
             urlTextBox.Size = new Size(500, 27);
+            urlTextBox.TabIndex = 1;
             urlTextBox.TextChanged += UrlTextBox_TextChanged;
-
-            // Paste Button
+            // 
+            // pasteButton
+            // 
             pasteButton.Location = new Point(660, 10);
+            pasteButton.Name = "pasteButton";
             pasteButton.Size = new Size(60, 29);
+            pasteButton.TabIndex = 2;
             pasteButton.Text = "Paste";
             pasteButton.Click += PasteButton_Click;
-
-            // Paste and Go Button
+            // 
+            // pasteAndGoButton
+            // 
             pasteAndGoButton.Location = new Point(726, 10);
+            pasteAndGoButton.Name = "pasteAndGoButton";
             pasteAndGoButton.Size = new Size(110, 29);
+            pasteAndGoButton.TabIndex = 3;
             pasteAndGoButton.Text = "Paste and Go";
             pasteAndGoButton.Click += PasteAndGoButton_Click;
-
-            // Quality Label
-            qualityLabel.AutoSize = true;
-            qualityLabel.Location = new Point(12, 50);
-            qualityLabel.Size = new Size(114, 20);
-            qualityLabel.Text = "Max Quality (p):";
-
-            // Quality ComboBox
+            // 
+            // qualityComboBox
+            // 
             qualityComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             qualityComboBox.Items.AddRange(new object[] { "2160", "1440", "1080", "720", "480", "360", "240", "144" });
             qualityComboBox.Location = new Point(144, 47);
+            qualityComboBox.Name = "qualityComboBox";
             qualityComboBox.Size = new Size(121, 28);
-
-            // AudioOnly Checkbox
+            qualityComboBox.TabIndex = 5;
+            // 
+            // audioOnlyCheckBox
+            // 
             audioOnlyCheckBox.AutoSize = true;
             audioOnlyCheckBox.Location = new Point(280, 49);
+            audioOnlyCheckBox.Name = "audioOnlyCheckBox";
+            audioOnlyCheckBox.Size = new Size(105, 24);
+            audioOnlyCheckBox.TabIndex = 6;
             audioOnlyCheckBox.Text = "Audio Only";
-
-            // Launch Button
+            // 
+            // launchButton
+            // 
             launchButton.Location = new Point(12, 80);
+            launchButton.Name = "launchButton";
             launchButton.Size = new Size(824, 40);
+            launchButton.TabIndex = 7;
             launchButton.Text = "Launch";
             launchButton.Click += launchButton_Click;
-
-            // SplitContainer
-            splitContainer.Location = new Point(12, 130);
-            splitContainer.Size = new Size(960, 450);
-            splitContainer.SplitterDistance = 640;
-            splitContainer.Orientation = Orientation.Vertical;
+            // 
+            // urlLabel
+            // 
+            urlLabel.AutoSize = true;
+            urlLabel.Location = new Point(12, 15);
+            urlLabel.Name = "urlLabel";
+            urlLabel.Size = new Size(99, 20);
+            urlLabel.TabIndex = 0;
+            urlLabel.Text = "YouTube URL:";
+            // 
+            // qualityLabel
+            // 
+            qualityLabel.AutoSize = true;
+            qualityLabel.Location = new Point(12, 50);
+            qualityLabel.Name = "qualityLabel";
+            qualityLabel.Size = new Size(114, 20);
+            qualityLabel.TabIndex = 4;
+            qualityLabel.Text = "Max Quality (p):";
+            // 
+            // splitContainer
+            // 
             splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-
-            // Left panel (for mpv window embedding)
-            mpvPanel.Dock = DockStyle.Fill;
-            mpvPanel.BackColor = Color.Black;
-            mpvPanel.MouseEnter += new System.EventHandler(this.mpvPanel_MouseEnter);
-            mpvPanel.MouseLeave += new System.EventHandler(this.mpvPanel_MouseLeave);
+            splitContainer.Location = new Point(12, 188);
+            splitContainer.Name = "splitContainer";
+            // 
+            // splitContainer.Panel1
+            // 
             splitContainer.Panel1.Controls.Add(mpvPanel);
-
-            // Play / Pause
+            // 
+            // splitContainer.Panel2
+            // 
+            splitContainer.Panel2.Controls.Add(consoleTextBox);
+            splitContainer.Size = new Size(960, 392);
+            splitContainer.SplitterDistance = 640;
+            splitContainer.TabIndex = 8;
+            // 
+            // mpvPanel
+            // 
+            mpvPanel.BackColor = Color.Black;
+            mpvPanel.Dock = DockStyle.Fill;
+            mpvPanel.Location = new Point(0, 0);
+            mpvPanel.Name = "mpvPanel";
+            mpvPanel.Size = new Size(640, 392);
+            mpvPanel.TabIndex = 0;
+            // 
+            // playPauseButton
+            // 
+            playPauseButton.Location = new Point(12, 126);
+            playPauseButton.Name = "playPauseButton";
+            playPauseButton.Size = new Size(40, 30);
+            playPauseButton.TabIndex = 0;
             playPauseButton.Text = "⏯";
-            playPauseButton.Size = new System.Drawing.Size(40, 30);
-            playPauseButton.Location = new System.Drawing.Point(10, 10);
             playPauseButton.Visible = false;
-            playPauseButton.Click += new System.EventHandler(this.playPauseButton_Click);
-            mpvPanel.Controls.Add(this.playPauseButton);
-
-            // Volume Slider
-            volumeSlider.Minimum = 0;
+            playPauseButton.Click += playPauseButton_Click;
+            // 
+            // volumeSlider
+            // 
+            volumeSlider.Location = new Point(58, 126);
             volumeSlider.Maximum = 100;
-            volumeSlider.Value = 100;
+            volumeSlider.Name = "volumeSlider";
+            volumeSlider.Size = new Size(100, 56);
+            volumeSlider.TabIndex = 1;
             volumeSlider.TickStyle = TickStyle.None;
-            volumeSlider.Size = new System.Drawing.Size(100, 30);
-            volumeSlider.Location = new System.Drawing.Point(60, 10);
+            volumeSlider.Value = 100;
             volumeSlider.Visible = false;
-            volumeSlider.Scroll += new System.EventHandler(this.volumeSlider_Scroll);
-            mpvPanel.Controls.Add(this.volumeSlider);
-
-            // Position Slider
-            positionSlider.Minimum = 0;
+            volumeSlider.Scroll += volumeSlider_Scroll;
+            // 
+            // positionSlider
+            // 
+            positionSlider.Location = new Point(164, 126);
             positionSlider.Maximum = 10000;
-            positionSlider.Value = 0;
+            positionSlider.Name = "positionSlider";
+            positionSlider.Size = new Size(300, 56);
+            positionSlider.TabIndex = 2;
             positionSlider.TickStyle = TickStyle.None;
-            positionSlider.Size = new System.Drawing.Size(300, 30);
-            positionSlider.Location = new System.Drawing.Point(170, 10);
             positionSlider.Visible = false;
-            positionSlider.Scroll += new System.EventHandler(this.positionSlider_Scroll);
-            mpvPanel.Controls.Add(this.positionSlider);
-
-            // Time Label
+            positionSlider.Scroll += positionSlider_Scroll;
+            // 
+            // timeLabel
+            // 
             timeLabel.AutoSize = true;
-            timeLabel.Location = new System.Drawing.Point(480, 10);
-            timeLabel.Size = new System.Drawing.Size(100, 20);
+            timeLabel.ForeColor = Color.Black;
+            timeLabel.Location = new Point(470, 131);
+            timeLabel.Name = "timeLabel";
+            timeLabel.Size = new Size(77, 20);
+            timeLabel.TabIndex = 3;
             timeLabel.Text = "0:00 / 0:00";
-            timeLabel.ForeColor = Color.White;
             timeLabel.Visible = false;
-            mpvPanel.Controls.Add(this.timeLabel);
-
-            // Right panel (for console output)
+            // 
+            // consoleTextBox
+            // 
+            consoleTextBox.BackColor = Color.Black;
             consoleTextBox.Dock = DockStyle.Fill;
+            consoleTextBox.Font = new Font("Consolas", 10F);
+            consoleTextBox.ForeColor = Color.White;
+            consoleTextBox.Location = new Point(0, 0);
             consoleTextBox.Multiline = true;
+            consoleTextBox.Name = "consoleTextBox";
             consoleTextBox.ReadOnly = true;
             consoleTextBox.ScrollBars = ScrollBars.Both;
-            consoleTextBox.BackColor = Color.Black;
-            consoleTextBox.ForeColor = Color.White;
-            consoleTextBox.Font = new Font("Consolas", 10);
-            splitContainer.Panel2.Controls.Add(consoleTextBox);
-
-            // Add all to form
+            consoleTextBox.Size = new Size(316, 392);
+            consoleTextBox.TabIndex = 0;
+            // 
+            // MainForm
+            // 
+            ClientSize = new Size(1000, 600);
+            Controls.Add(timeLabel);
+            Controls.Add(positionSlider);
+            Controls.Add(volumeSlider);
+            Controls.Add(playPauseButton);
             Controls.Add(urlLabel);
             Controls.Add(urlTextBox);
             Controls.Add(pasteButton);
@@ -180,22 +227,17 @@
             Controls.Add(audioOnlyCheckBox);
             Controls.Add(launchButton);
             Controls.Add(splitContainer);
-        }
-
-        private void mpvPanel_MouseEnter(object sender, EventArgs e)
-        {
-            playPauseButton.Visible = true;
-            volumeSlider.Visible = true;
-            positionSlider.Visible = true;
-            timeLabel.Visible = true;
-        }
-
-        private void mpvPanel_MouseLeave(object sender, EventArgs e)
-        {
-            playPauseButton.Visible = false;
-            volumeSlider.Visible = false;
-            positionSlider.Visible = false;
-            timeLabel.Visible = false;
+            Name = "MainForm";
+            Text = "MPV YouTube Launcher";
+            splitContainer.Panel1.ResumeLayout(false);
+            splitContainer.Panel2.ResumeLayout(false);
+            splitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer).EndInit();
+            splitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)volumeSlider).EndInit();
+            ((System.ComponentModel.ISupportInitialize)positionSlider).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
         }
     }
 }
