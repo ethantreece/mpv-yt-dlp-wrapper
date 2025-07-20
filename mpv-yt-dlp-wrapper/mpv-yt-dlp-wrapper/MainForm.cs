@@ -46,51 +46,84 @@ namespace mpv_yt_dlp_wrapper
 
         private void launchButton_Click(object sender, EventArgs e)
         {
-            string url = urlTextBox.Text.Trim();
-            if (string.IsNullOrEmpty(url))
-            {
-                MessageBox.Show("Please enter a YouTube URL.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (string.IsNullOrWhiteSpace(urlTextBox.Text))
                 return;
-            }
 
-            string quality = qualityComboBox.SelectedItem?.ToString() ?? "";
+            string url = urlTextBox.Text.Trim();
+            string quality = qualityComboBox.SelectedItem?.ToString() ?? "best";
             bool audioOnly = audioOnlyCheckBox.Checked;
 
-            var ytdlArgs = new List<string>();
-            if (!string.IsNullOrWhiteSpace(quality))
-            {
-                ytdlArgs.Add($"bestvideo[height<={quality}]+bestaudio/best");
-            }
-
-            var mpvArgs = new List<string>();
-
-            if (ytdlArgs.Count() > 0)
-            {
-                mpvArgs.Add($"--ytdl-format=\"{string.Join(" ", ytdlArgs)}\"");
-            }
+            List<string> mpvArgs = new();
 
             if (audioOnly)
             {
-                mpvArgs.Add("--vid=no --force-window=yes");
+                mpvArgs.Add("--no-video");
             }
 
+            // Embed into panel1
+            mpvArgs.Add($"--wid={splitContainer.Panel1.Handle}");
 
-            mpvArgs.Add($"\"{url}\"");
+            // Optional: Set ytdl-format (controls video/audio quality)
+            if (!audioOnly && int.TryParse(quality, out int q))
+            {
+                mpvArgs.Add($"--ytdl-format=bestvideo[height<={q}]+bestaudio/best");
+            }
+
+            mpvArgs.Add("--force-window=yes"); // Ensures window is created if no video
+            mpvArgs.Add("--autofit=100%x100%"); // Fit to panel
+
+            mpvArgs.Add(url);
 
             try
             {
-                Process.Start(new ProcessStartInfo
+                // Clear output box
+                consoleTextBox.Clear();
+
+                Process mpvProcess = new()
                 {
-                    FileName = "mpv",
-                    Arguments = string.Join(" ", mpvArgs),
-                    UseShellExecute = true,
-                    RedirectStandardError = false,
-                    RedirectStandardOutput = false
-                });
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "mpv",
+                        Arguments = string.Join(" ", mpvArgs.Select(arg => $"\"{arg}\"")),
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                // Capture both output and error
+                mpvProcess.OutputDataReceived += (s, ea) =>
+                {
+                    if (!string.IsNullOrEmpty(ea.Data))
+                        AppendOutput(ea.Data);
+                };
+                mpvProcess.ErrorDataReceived += (s, ea) =>
+                {
+                    if (!string.IsNullOrEmpty(ea.Data))
+                        AppendOutput(ea.Data);
+                };
+
+                mpvProcess.Start();
+                mpvProcess.BeginOutputReadLine();
+                mpvProcess.BeginErrorReadLine();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed to launch mpv: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Failed to launch MPV:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void AppendOutput(string text)
+        {
+            if (consoleTextBox.InvokeRequired)
+            {
+                consoleTextBox.Invoke(() => consoleTextBox.AppendText(text + Environment.NewLine));
+            }
+            else
+            {
+                consoleTextBox.AppendText(text + Environment.NewLine);
             }
         }
     }
