@@ -255,7 +255,7 @@ namespace mpv_yt_dlp_wrapper
             string[] lines = consoleTextBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
             // Check if there's a line before the last one and it starts with "AV: "
-            if (lines.Length > 1 && lines[lines.Length - 2].StartsWith("AV: "))
+            if (lines.Length > 1 && (lines[lines.Length - 2].StartsWith("AV: ") || lines[lines.Length - 2].StartsWith("(Paused)")))
             {
                 lines[lines.Length - 2] = text;
                 consoleTextBox.Text = string.Join(Environment.NewLine, lines);
