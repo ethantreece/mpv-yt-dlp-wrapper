@@ -1,9 +1,18 @@
 ﻿using System.Diagnostics;
+using System.IO.Pipes;
+using System.Text;
+using System.Text.Json;
 
 namespace mpv_yt_dlp_wrapper
 {
     public partial class MainForm : Form
     {
+        private Process? mpvProcess;
+        private NamedPipeClientStream? pipeClient;
+        private double currentTime = 0;
+        private double duration = 0;
+        private bool isPaused = false;
+
         public MainForm()
         {
             InitializeComponent();
@@ -44,10 +53,25 @@ namespace mpv_yt_dlp_wrapper
             }
         }
 
-        private void launchButton_Click(object sender, EventArgs e)
+        private async void launchButton_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(urlTextBox.Text))
                 return;
+
+            // Stop existing process if running
+            if (mpvProcess != null && !mpvProcess.HasExited)
+            {
+                mpvProcess.Kill();
+                mpvProcess.WaitForExit();
+                mpvProcess.Dispose();
+                mpvProcess = null;
+            }
+            if (pipeClient != null)
+            {
+                pipeClient.Close();
+                pipeClient.Dispose();
+                pipeClient = null;
+            }
 
             string url = urlTextBox.Text.Trim();
             string quality = qualityComboBox.SelectedItem?.ToString() ?? "best";
@@ -60,8 +84,8 @@ namespace mpv_yt_dlp_wrapper
                 mpvArgs.Add("--no-video");
             }
 
-            // Embed into panel1
-            mpvArgs.Add($"--wid={splitContainer.Panel1.Handle}");
+            // Embed into panel
+            mpvArgs.Add($"--wid={mpvPanel.Handle}");
 
             // Optional: Set ytdl-format (controls video/audio quality)
             if (!audioOnly && int.TryParse(quality, out int q))
@@ -72,6 +96,10 @@ namespace mpv_yt_dlp_wrapper
             mpvArgs.Add("--force-window=yes"); // Ensures window is created if no video
             mpvArgs.Add("--autofit=100%x100%"); // Fit to panel
 
+            // IPC server
+            string pipeName = @"\\.\pipe\mpv_pipe_" + Guid.NewGuid().ToString();
+            mpvArgs.Add($"--input-ipc-server={pipeName}");
+
             mpvArgs.Add(url);
 
             try
@@ -79,12 +107,12 @@ namespace mpv_yt_dlp_wrapper
                 // Clear output box
                 consoleTextBox.Clear();
 
-                Process mpvProcess = new()
+                mpvProcess = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = "mpv",
-                        Arguments = string.Join(" ", mpvArgs.Select(arg => $"\"{arg}\"")),
+                        Arguments = string.Join(" ", mpvArgs),
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -93,21 +121,40 @@ namespace mpv_yt_dlp_wrapper
                     EnableRaisingEvents = true
                 };
 
+                mpvProcess.Exited += (s, ea) =>
+                {
+                    mpvProcess = null;
+                    if (pipeClient != null)
+                    {
+                        pipeClient.Close();
+                        pipeClient = null;
+                    }
+                    this.Invoke(() => consoleTextBox.AppendText("Playback ended." + Environment.NewLine));
+                };
+
                 // Capture both output and error
-                mpvProcess.OutputDataReceived += (s, ea) =>
-                {
-                    if (!string.IsNullOrEmpty(ea.Data))
-                        AppendOutput(ea.Data);
-                };
-                mpvProcess.ErrorDataReceived += (s, ea) =>
-                {
-                    if (!string.IsNullOrEmpty(ea.Data))
-                        AppendOutput(ea.Data);
-                };
+                mpvProcess.OutputDataReceived += (s, ea) => AppendOutput(ea.Data);
+                mpvProcess.ErrorDataReceived += (s, ea) => AppendOutput(ea.Data);
 
                 mpvProcess.Start();
                 mpvProcess.BeginOutputReadLine();
                 mpvProcess.BeginErrorReadLine();
+
+                // Connect to IPC
+                pipeClient = new NamedPipeClientStream(".", pipeName.Replace(@"\\.\pipe\", ""), PipeDirection.InOut, PipeOptions.Asynchronous);
+                pipeClient.Connect(3000);
+
+                // Start reading IPC
+                _ = ReadIpcAsync();
+
+                // Observe properties
+                await SendCommandAsync("observe_property", "1", "percent-pos");
+                await SendCommandAsync("observe_property", "2", "pause");
+                await SendCommandAsync("observe_property", "3", "time-pos");
+                await SendCommandAsync("observe_property", "4", "duration");
+
+                // Get initial volume
+                await SendCommandAsync(1, "get_property", "volume");
             }
             catch (Exception ex)
             {
@@ -115,8 +162,13 @@ namespace mpv_yt_dlp_wrapper
             }
         }
 
-        private void AppendOutput(string text)
+        private void AppendOutput(string? text)
         {
+            if (string.IsNullOrEmpty(text)) return;
+
+            // Replace \r with \n to handle progress as separate lines
+            text = text.Replace("\r", Environment.NewLine);
+
             if (consoleTextBox.InvokeRequired)
             {
                 consoleTextBox.Invoke(() => consoleTextBox.AppendText(text + Environment.NewLine));
@@ -125,6 +177,121 @@ namespace mpv_yt_dlp_wrapper
             {
                 consoleTextBox.AppendText(text + Environment.NewLine);
             }
+        }
+
+        private async Task ReadIpcAsync()
+        {
+            if (pipeClient == null) return;
+
+            using var reader = new StreamReader(pipeClient, Encoding.UTF8, true, 4096, true);
+            while (true)
+            {
+                string? line;
+                try
+                {
+                    line = await reader.ReadLineAsync();
+                }
+                catch { break; }
+
+                if (line == null) break;
+
+                try
+                {
+                    var json = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(line);
+                    if (json == null) continue;
+
+                    if (json.TryGetValue("event", out var eventElem) && eventElem.GetString() == "property-change")
+                    {
+                        int id = json["id"].GetInt32();
+                        JsonElement dataElem;
+                        json.TryGetValue("data", out dataElem);
+
+                        switch (id)
+                        {
+                            case 1: // percent-pos
+                                double percent = dataElem.GetDouble();
+                                this.Invoke(() => positionSlider.Value = (int)(percent * 100));
+                                break;
+                            case 2: // pause
+                                isPaused = dataElem.GetBoolean();
+                                this.Invoke(() => playPauseButton.Text = isPaused ? "▶️" : "⏸");
+                                break;
+                            case 3: // time-pos
+                                currentTime = dataElem.GetDouble();
+                                UpdateTimeLabel();
+                                break;
+                            case 4: // duration
+                                duration = dataElem.GetDouble();
+                                UpdateTimeLabel();
+                                break;
+                        }
+                    }
+                    else if (json.TryGetValue("request_id", out var reqIdElem))
+                    {
+                        int reqId = reqIdElem.GetInt32();
+                        if (json["error"].GetString() == "success")
+                        {
+                            if (reqId == 1) // volume
+                            {
+                                double vol = json["data"].GetDouble();
+                                this.Invoke(() => volumeSlider.Value = (int)vol);
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private async Task SendCommandAsync(params object[] command)
+        {
+            if (pipeClient == null || !pipeClient.IsConnected) return;
+
+            var obj = new { command = command };
+            string json = JsonSerializer.Serialize(obj) + "\n";
+            byte[] bytes = Encoding.UTF8.GetBytes(json);
+            try
+            {
+                await pipeClient.WriteAsync(bytes, 0, bytes.Length);
+            }
+            catch { }
+        }
+
+        private async Task SendCommandAsync(int requestId, params string[] command)
+        {
+            if (pipeClient == null || !pipeClient.IsConnected) return;
+
+            var obj = new { request_id = requestId, command = command };
+            string json = JsonSerializer.Serialize(obj) + "\n";
+            byte[] bytes = Encoding.UTF8.GetBytes(json);
+            try
+            {
+                await pipeClient.WriteAsync(bytes, 0, bytes.Length);
+            }
+            catch { }
+        }
+
+        private void UpdateTimeLabel()
+        {
+            string cur = TimeSpan.FromSeconds(currentTime).ToString(@"m\:ss");
+            string dur = TimeSpan.FromSeconds(duration).ToString(@"m\:ss");
+            this.Invoke(() => timeLabel.Text = $"{cur} / {dur}");
+        }
+
+        private async void playPauseButton_Click(object sender, EventArgs e)
+        {
+            await SendCommandAsync("cycle", "pause");
+        }
+
+        private async void volumeSlider_Scroll(object sender, EventArgs e)
+        {
+            await SendCommandAsync("set_property", "volume", volumeSlider.Value.ToString());
+        }
+
+        private async void positionSlider_Scroll(object sender, EventArgs e)
+        {
+            double percent = positionSlider.Value / 100.0;
+            await SendCommandAsync("set_property", "percent-pos", percent.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 }

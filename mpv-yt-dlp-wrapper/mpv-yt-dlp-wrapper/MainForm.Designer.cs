@@ -19,6 +19,8 @@
 
         private System.Windows.Forms.Button playPauseButton;
         private System.Windows.Forms.TrackBar volumeSlider;
+        private System.Windows.Forms.TrackBar positionSlider;
+        private System.Windows.Forms.Label timeLabel;
 
         protected override void Dispose(bool disposing)
         {
@@ -49,6 +51,8 @@
             mpvPanel = new Panel();
             playPauseButton = new Button();
             volumeSlider = new TrackBar();
+            positionSlider = new TrackBar();
+            timeLabel = new Label();
 
             consoleTextBox = new TextBox();
 
@@ -107,7 +111,7 @@
             splitContainer.Location = new Point(12, 130);
             splitContainer.Size = new Size(960, 450);
             splitContainer.SplitterDistance = 640;
-            splitContainer.Orientation = Orientation.Horizontal;
+            splitContainer.Orientation = Orientation.Vertical;
             splitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
             // Left panel (for mpv window embedding)
@@ -122,7 +126,7 @@
             playPauseButton.Size = new System.Drawing.Size(40, 30);
             playPauseButton.Location = new System.Drawing.Point(10, 10);
             playPauseButton.Visible = false;
-            // playPauseButton.Click += new System.EventHandler(this.playPauseButton_Click);
+            playPauseButton.Click += new System.EventHandler(this.playPauseButton_Click);
             mpvPanel.Controls.Add(this.playPauseButton);
 
             // Volume Slider
@@ -133,8 +137,28 @@
             volumeSlider.Size = new System.Drawing.Size(100, 30);
             volumeSlider.Location = new System.Drawing.Point(60, 10);
             volumeSlider.Visible = false;
-            // volumeSlider.Scroll += new System.EventHandler(this.volumeSlider_Scroll);
+            volumeSlider.Scroll += new System.EventHandler(this.volumeSlider_Scroll);
             mpvPanel.Controls.Add(this.volumeSlider);
+
+            // Position Slider
+            positionSlider.Minimum = 0;
+            positionSlider.Maximum = 10000;
+            positionSlider.Value = 0;
+            positionSlider.TickStyle = TickStyle.None;
+            positionSlider.Size = new System.Drawing.Size(300, 30);
+            positionSlider.Location = new System.Drawing.Point(170, 10);
+            positionSlider.Visible = false;
+            positionSlider.Scroll += new System.EventHandler(this.positionSlider_Scroll);
+            mpvPanel.Controls.Add(this.positionSlider);
+
+            // Time Label
+            timeLabel.AutoSize = true;
+            timeLabel.Location = new System.Drawing.Point(480, 10);
+            timeLabel.Size = new System.Drawing.Size(100, 20);
+            timeLabel.Text = "0:00 / 0:00";
+            timeLabel.ForeColor = Color.White;
+            timeLabel.Visible = false;
+            mpvPanel.Controls.Add(this.timeLabel);
 
             // Right panel (for console output)
             consoleTextBox.Dock = DockStyle.Fill;
@@ -142,7 +166,8 @@
             consoleTextBox.ReadOnly = true;
             consoleTextBox.ScrollBars = ScrollBars.Both;
             consoleTextBox.BackColor = Color.Black;
-            consoleTextBox.ForeColor = Color.LightGreen;
+            consoleTextBox.ForeColor = Color.White;
+            consoleTextBox.Font = new Font("Consolas", 10);
             splitContainer.Panel2.Controls.Add(consoleTextBox);
 
             // Add all to form
@@ -161,12 +186,16 @@
         {
             playPauseButton.Visible = true;
             volumeSlider.Visible = true;
+            positionSlider.Visible = true;
+            timeLabel.Visible = true;
         }
 
         private void mpvPanel_MouseLeave(object sender, EventArgs e)
         {
             playPauseButton.Visible = false;
             volumeSlider.Visible = false;
+            positionSlider.Visible = false;
+            timeLabel.Visible = false;
         }
     }
 }
