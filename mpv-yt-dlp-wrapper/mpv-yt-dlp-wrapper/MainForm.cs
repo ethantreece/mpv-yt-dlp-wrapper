@@ -59,19 +59,7 @@ namespace mpv_yt_dlp_wrapper
                 return;
 
             // Stop existing process if running
-            if (mpvProcess != null && !mpvProcess.HasExited)
-            {
-                mpvProcess.Kill();
-                mpvProcess.WaitForExit();
-                mpvProcess.Dispose();
-                mpvProcess = null;
-            }
-            if (pipeClient != null)
-            {
-                pipeClient.Close();
-                pipeClient.Dispose();
-                pipeClient = null;
-            }
+            await StopMpvProcess();
 
             string url = urlTextBox.Text.Trim();
             string quality = qualityComboBox.SelectedItem?.ToString() ?? "best";
@@ -126,7 +114,12 @@ namespace mpv_yt_dlp_wrapper
                     mpvProcess = null;
                     if (pipeClient != null)
                     {
-                        pipeClient.Close();
+                        try
+                        {
+                            pipeClient.Close();
+                            pipeClient.Dispose();
+                        }
+                        catch { }
                         pipeClient = null;
                     }
                     this.Invoke(() => consoleTextBox.AppendText("Playback ended." + Environment.NewLine));
@@ -160,6 +153,60 @@ namespace mpv_yt_dlp_wrapper
             {
                 MessageBox.Show("Failed to launch MPV:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private async Task StopMpvProcess()
+        {
+            if (mpvProcess != null && !mpvProcess.HasExited)
+            {
+                try
+                {
+                    // Try to gracefully stop via IPC
+                    await SendCommandAsync("quit");
+                    // Wait briefly for graceful exit
+                    await Task.Delay(500);
+                    if (mpvProcess != null && !mpvProcess.HasExited)
+                    {
+                        mpvProcess.Kill();
+                        mpvProcess.WaitForExit();
+                    }
+                }
+                catch
+                {
+                    // Fallback to forceful kill if IPC fails
+                    try
+                    {
+                        if (mpvProcess != null && !mpvProcess.HasExited)
+                        {
+                            mpvProcess.Kill();
+                            mpvProcess.WaitForExit();
+                        }
+                    }
+                    catch { }
+                }
+                finally
+                {
+                    if (mpvProcess != null)
+                    {
+                        mpvProcess.Dispose();
+                        mpvProcess = null;
+                    }
+                }
+            }
+
+            if (pipeClient != null)
+            {
+                try
+                {
+                    pipeClient.Close();
+                    pipeClient.Dispose();
+                }
+                catch { }
+                pipeClient = null;
+            }
+
+            // Brief delay to ensure resources are released
+            await Task.Delay(100);
         }
 
         private void AppendOutput(string? text)
