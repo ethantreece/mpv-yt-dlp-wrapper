@@ -156,14 +156,11 @@ namespace mpv_yt_dlp_wrapper
                 // Start reading IPC
                 _ = ReadIpcAsync();
 
-                // Observe properties
-                await SendCommandAsync("observe_property", "1", "percent-pos");
-                await SendCommandAsync("observe_property", "2", "pause");
-                await SendCommandAsync("observe_property", "3", "time-pos");
-                await SendCommandAsync("observe_property", "4", "duration");
-
-                // Get initial volume
-                await SendCommandAsync(1, "get_property", "volume");
+                // In launchButton_Click, update the observe commands:
+                await SendCommandAsync("observe_property", 1, "percent-pos");
+                await SendCommandAsync("observe_property", 2, "pause");
+                await SendCommandAsync("observe_property", 3, "time-pos");
+                await SendCommandAsync("observe_property", 4, "duration");
 
                 ShowControls();
             }
@@ -254,8 +251,8 @@ namespace mpv_yt_dlp_wrapper
         {
             string[] lines = consoleTextBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
-            // Check if there's a line before the last one and it starts with "AV: "
-            if (lines.Length > 1 && (lines[lines.Length - 2].StartsWith("AV: ") || lines[lines.Length - 2].StartsWith("(Paused)")))
+            var startWith = new[] { "AV: ", "(Paused)", "A: " };
+            if (lines.Length > 1 && startWith.Any(x => lines[lines.Length - 2].StartsWith(x)))
             {
                 lines[lines.Length - 2] = text;
                 consoleTextBox.Text = string.Join(Environment.NewLine, lines);

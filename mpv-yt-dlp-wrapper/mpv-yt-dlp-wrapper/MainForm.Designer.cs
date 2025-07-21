@@ -43,11 +43,11 @@
             qualityLabel = new Label();
             splitContainer = new SplitContainer();
             mpvPanel = new Panel();
+            consoleTextBox = new TextBox();
             playPauseButton = new Button();
             volumeSlider = new TrackBar();
             positionSlider = new TrackBar();
             timeLabel = new Label();
-            consoleTextBox = new TextBox();
             ((System.ComponentModel.ISupportInitialize)splitContainer).BeginInit();
             splitContainer.Panel1.SuspendLayout();
             splitContainer.Panel2.SuspendLayout();
@@ -140,8 +140,8 @@
             // splitContainer.Panel2
             // 
             splitContainer.Panel2.Controls.Add(consoleTextBox);
-            splitContainer.Size = new Size(960, 392);
-            splitContainer.SplitterDistance = 640;
+            splitContainer.Size = new Size(824, 392);
+            splitContainer.SplitterDistance = 549;
             splitContainer.TabIndex = 8;
             // 
             // mpvPanel
@@ -150,8 +150,22 @@
             mpvPanel.Dock = DockStyle.Fill;
             mpvPanel.Location = new Point(0, 0);
             mpvPanel.Name = "mpvPanel";
-            mpvPanel.Size = new Size(640, 392);
+            mpvPanel.Size = new Size(549, 392);
             mpvPanel.TabIndex = 0;
+            // 
+            // consoleTextBox
+            // 
+            consoleTextBox.BackColor = Color.Black;
+            consoleTextBox.Dock = DockStyle.Fill;
+            consoleTextBox.Font = new Font("Consolas", 10F);
+            consoleTextBox.ForeColor = Color.White;
+            consoleTextBox.Location = new Point(0, 0);
+            consoleTextBox.Multiline = true;
+            consoleTextBox.Name = "consoleTextBox";
+            consoleTextBox.ReadOnly = true;
+            consoleTextBox.ScrollBars = ScrollBars.Both;
+            consoleTextBox.Size = new Size(271, 392);
+            consoleTextBox.TabIndex = 0;
             // 
             // playPauseButton
             // 
@@ -166,7 +180,7 @@
             // volumeSlider
             // 
             volumeSlider.Location = new Point(58, 126);
-            volumeSlider.Maximum = 100;
+            volumeSlider.Maximum = 130;
             volumeSlider.Name = "volumeSlider";
             volumeSlider.Size = new Size(100, 56);
             volumeSlider.TabIndex = 1;
@@ -180,7 +194,7 @@
             positionSlider.Location = new Point(164, 126);
             positionSlider.Maximum = 10000;
             positionSlider.Name = "positionSlider";
-            positionSlider.Size = new Size(300, 56);
+            positionSlider.Size = new Size(589, 56);
             positionSlider.TabIndex = 2;
             positionSlider.TickStyle = TickStyle.None;
             positionSlider.Visible = false;
@@ -190,30 +204,16 @@
             // 
             timeLabel.AutoSize = true;
             timeLabel.ForeColor = Color.Black;
-            timeLabel.Location = new Point(470, 131);
+            timeLabel.Location = new Point(759, 126);
             timeLabel.Name = "timeLabel";
             timeLabel.Size = new Size(77, 20);
             timeLabel.TabIndex = 3;
             timeLabel.Text = "0:00 / 0:00";
             timeLabel.Visible = false;
             // 
-            // consoleTextBox
-            // 
-            consoleTextBox.BackColor = Color.Black;
-            consoleTextBox.Dock = DockStyle.Fill;
-            consoleTextBox.Font = new Font("Consolas", 10F);
-            consoleTextBox.ForeColor = Color.White;
-            consoleTextBox.Location = new Point(0, 0);
-            consoleTextBox.Multiline = true;
-            consoleTextBox.Name = "consoleTextBox";
-            consoleTextBox.ReadOnly = true;
-            consoleTextBox.ScrollBars = ScrollBars.Both;
-            consoleTextBox.Size = new Size(316, 392);
-            consoleTextBox.TabIndex = 0;
-            // 
             // MainForm
             // 
-            ClientSize = new Size(1000, 600);
+            ClientSize = new Size(847, 600);
             Controls.Add(timeLabel);
             Controls.Add(positionSlider);
             Controls.Add(volumeSlider);
